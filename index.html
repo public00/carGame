@@ -53,11 +53,6 @@
                     dir -= Math.round(dir);
                     dir = dir * Math.PI * 2;
                     this.sprite.rotation += dir * 0.1;
-                    
-                    // if(game.input.keyboard.left.isDown){
-                    //     this.speed_x += Math.cos(this.sprite.rotation - Math.PI/2) * this.speed;
-                    //     this.speed_y += Math.sin(this.sprite.rotation - Math.PI/2) * this.speed;
-                    // }
 
                     // Move forward
                     if(game.input.keyboard.isDown(Phaser.Keyboard.W) || game.input.keyboard.isDown(Phaser.Keyboard.UP)){
