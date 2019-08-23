@@ -147,7 +147,7 @@
 
                 game.camera.x = player.sprite.x - WINDOW_WIDTH/2;
                 game.camera.y = player.sprite.y - WINDOW_HEIGHT/2;
-
+                console.log('test');
                 socket = io(); // This triggers the 'connection' event on the server
                 socket.emit('new-player',{x:player.sprite.x,y:player.sprite.y,angle:player.sprite.rotation,type:1})
                 // Listen for other players connecting
