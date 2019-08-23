@@ -1,6 +1,6 @@
 var express = require('express'); // Express contains some boilerplate to for routing and such
 var app = express();
-var http = require('https').Server(app);
+var http = require('http').Server(app);
 var io = require('socket.io')(http); // Here's where we include socket.io as a node module 
 
 // Serve the index page 
