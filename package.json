@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "express": "^4.15.2",
-    "socket.io": "^2.0.1"
+    "socket.io": "^2.2.0"
   },
   "author": "vl",
   "license": "ISC"

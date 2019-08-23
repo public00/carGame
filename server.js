@@ -32,7 +32,7 @@ io.on('connection', function(socket){
   // Listen for a disconnection and update our player table 
   socket.on('disconnect',function(state){
     delete players[socket.id];
-    io.emit('update-players',players);
+    io.emit('update-players',players); 
   }) 
   
   // Listen for move events and tell all other clients that something has moved 
