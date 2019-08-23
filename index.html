@@ -20,19 +20,20 @@
             }
         </style>
     </head>
-    <body> 
+    <body>
         <script type="text/javascript">
             var ASSET_URL = "assets/"
             //We first initialize the phaser game object
             var WINDOW_WIDTH = 750;
             var WINDOW_HEIGHT = 500;
             var game = new Phaser.Game(WINDOW_WIDTH, WINDOW_HEIGHT, Phaser.AUTO, '', {preload:preload, create:create, update:GameLoop} );
-            
+
             var WORLD_SIZE = {w:750,h:500};
-            
+          
+
             var water_tiles = [];
             var bullet_array = [];
-
+          
             var socket; //Declare it in this scope, initialize in the `create` function
             var other_players = {};
           
@@ -44,7 +45,6 @@
                 friction:0.95,
                 shot:false,
                 update: function(){
-                    cursors = game.input.keyboard.createCursorKeys();
                     // Lerp rotation towards mouse
                     var dx = (game.input.mousePointer.x + game.camera.x) - this.sprite.x;
                     var dy = (game.input.mousePointer.y + game.camera.y) - this.sprite.y;
@@ -78,7 +78,7 @@
                         bullet_array.push(bullet); 
                         */
                         this.shot = true;
-                        // Tell the server we shot a bullet  
+                        // Tell the server we shot a bullet 
                         socket.emit('shoot-bullet',{x:this.sprite.x,y:this.sprite.y,angle:this.sprite.rotation,speed_x:speed_x,speed_y:speed_y})
                     }
                     if(!game.input.activePointer.leftButton.isDown) this.shot = false;
