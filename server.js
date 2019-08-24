@@ -23,6 +23,7 @@ var bullet_array = []; // Keeps track of all the bullets to update them on the s
 io.on('connection', function(socket){
 	// Listen for a new player trying to connect
 	socket.on('new-player',function(state){
+    console.log("new playeeeer");
 		console.log("New player joined with state:",state);
 		players[socket.id] = state;
 		// Broadcast a signal to everyone containing the updated players list

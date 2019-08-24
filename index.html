@@ -46,19 +46,33 @@
                 shot:false,
                 update: function(){
                     // Lerp rotation towards mouse
-                    var dx = (game.input.mousePointer.x + game.camera.x) - this.sprite.x;
-                    var dy = (game.input.mousePointer.y + game.camera.y) - this.sprite.y;
+                    var dx = 0;
+                    var dy = 0;
+                    if(game.input.keyboard.isDown(Phaser.Keyboard.A)){
+                        dx = this.sprite.x - 10;
+                        this.speed_x -=  this.speed;
+                      //  this.speed_y += Math.sin(this.sprite.rotation + Math.PI/2) * this.speed;
+                    }
+                    if(game.input.keyboard.isDown(Phaser.Keyboard.D)){
+                        dx = this.sprite.x + 10;
+                        this.speed_x +=  this.speed;
+                    }
+                    if(game.input.keyboard.isDown(Phaser.Keyboard.W)){
+                        dy = this.sprite.y + 10;
+                        this.speed_y -= this.speed;
+                    }
+                    if(game.input.keyboard.isDown(Phaser.Keyboard.S)){
+                        dy = this.sprite.y - 10; 
+                        this.speed_y += this.speed;
+                    }
+           
+                //    var dx = (game.input.mousePointer.x + game.camera.x) - this.sprite.x;
+                 //   var dy = (game.input.mousePointer.y + game.camera.y) - this.sprite.y;
                     var angle = Math.atan2(dy,dx) - Math.PI/2;
                     var dir = (angle - this.sprite.rotation) / (Math.PI * 2);
                     dir -= Math.round(dir);
                     dir = dir * Math.PI * 2;
                     this.sprite.rotation += dir * 0.1;
-
-                    // Move forward
-                    if(game.input.keyboard.isDown(Phaser.Keyboard.W) || game.input.keyboard.isDown(Phaser.Keyboard.UP)){
-                        this.speed_x += Math.cos(this.sprite.rotation + Math.PI/2) * this.speed;
-                        this.speed_y += Math.sin(this.sprite.rotation + Math.PI/2) * this.speed;
-                    }
                     
                     this.sprite.x += this.speed_x;
                     this.sprite.y += this.speed_y;
@@ -70,15 +84,8 @@
                     if(game.input.activePointer.leftButton.isDown && !this.shot){
                         var speed_x = Math.cos(this.sprite.rotation + Math.PI/2) * 20;
                         var speed_y = Math.sin(this.sprite.rotation + Math.PI/2) * 20;
-                        /* The server is now simulating the bullets, clients are just rendering bullet locations, so no need to do this anymore
-                        var bullet = {};
-                        bullet.speed_x = speed_x;
-                        bullet.speed_y = speed_y;
-                        bullet.sprite = game.add.sprite(this.sprite.x + bullet.speed_x,this.sprite.y + bullet.speed_y,'bullet');
-                        bullet_array.push(bullet); 
-                        */
+            
                         this.shot = true;
-                        // Tell the server we shot a bullet 
                         socket.emit('shoot-bullet',{x:this.sprite.x,y:this.sprite.y,angle:this.sprite.rotation,speed_x:speed_x,speed_y:speed_y})
                     }
                     if(!game.input.activePointer.leftButton.isDown) this.shot = false;
@@ -98,28 +105,28 @@
                   
             };
 
-            function CreateShip(type,x,y,angle){
+            function CreateCharacter(type,x,y,angle){
                 // type is an int that can be between 1 and 6 inclusive 
                 // returns the sprite just created 
-                var sprite = game.add.sprite(x,y,'ship' + String(type) + '_1');
+                var sprite = game.add.sprite(x,y,'character');
                 sprite.rotation = angle;
                 sprite.anchor.setTo(0.5,0.5);
                 return sprite;
             }
-
-
+            
             function preload(){
                 game.load.crossOrigin = "Anonymous";
                 game.stage.backgroundColor = "#3399DA";
-
-                // Load all the ships
-                for(var i=1;i<=6;i++){
-                    game.load.image('ship'+String(i) +'_1', ASSET_URL + 'ship'+String(i)+'_1.png');
-                    game.load.image('ship'+String(i) +'_2', ASSET_URL + 'ship'+String(i)+'_2.png');
-                    game.load.image('ship'+String(i) +'_3', ASSET_URL + 'ship'+String(i)+'_3.png');
-                    game.load.image('ship'+String(i) +'_4', ASSET_URL + 'ship'+String(i)+'_4.png');
-                }
                 
+                // // Load all the ships
+                // for(var i=1;i<=6;i++){
+                //     game.load.image('ship'+String(i) +'_1', ASSET_URL + 'ship'+String(i)+'_1.png');
+                //     game.load.image('ship'+String(i) +'_2', ASSET_URL + 'ship'+String(i)+'_2.png');
+                //     game.load.image('ship'+String(i) +'_3', ASSET_URL + 'ship'+String(i)+'_3.png');
+                //     game.load.image('ship'+String(i) +'_4', ASSET_URL + 'ship'+String(i)+'_4.png');
+                // }
+
+                game.load.image('character', ASSET_URL + 'character.png');
                 game.load.image('bullet', ASSET_URL + 'cannon_ball.png');
                 game.load.image('water', ASSET_URL + 'water_tile.png');
             }
@@ -139,10 +146,9 @@
 
                 // Create player
                 var player_ship_type = String(1);
-                player.sprite = game.add.sprite(Math.random() * WORLD_SIZE.w/2 + WORLD_SIZE.w/2,Math.random() * WORLD_SIZE.h/2 + WORLD_SIZE.h/2,'ship'+player_ship_type+'_1');
+                player.sprite = game.add.sprite(Math.random() * WORLD_SIZE.w/2 + WORLD_SIZE.w/2,Math.random() * WORLD_SIZE.h/2 + WORLD_SIZE.h/2,'character');
                 player.sprite.anchor.setTo(0.5,0.5);
                
-
                 game.world.setBounds(0, 0, WORLD_SIZE.w, WORLD_SIZE.h);
  
                 game.camera.x = player.sprite.x - WINDOW_WIDTH/2;
@@ -158,7 +164,8 @@
                         // If the player hasn't been created yet
                         if(other_players[id] == undefined && id != socket.id){ // Make sure you don't create yourself
                             var data = players_data[id];
-                            var p = CreateShip(data.type,data.x,data.y,data.angle);
+                            var p = CreateCharacter(data.type, data.x, data.y, data.angle);
+                           // var p = CreateShip(data.type,data.x,data.y,data.angle);
                             other_players[id] = p;
                             console.log("Created new player at (" + data.x + ", " + data.y + ")");
                         }
