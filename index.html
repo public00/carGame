@@ -33,7 +33,6 @@
 
             var WORLD_SIZE = {w:WINDOW_WIDTH,h:WINDOW_HEIGHT};
           
-
             var water_tiles = [];
           
             var socket; //Declare it in this scope, initialize in the `create` function
@@ -43,7 +42,7 @@
                 sprite:null,//Will hold the sprite when it's created 
                 speed_x:0,// This is the speed it's currently moving at
                 speed_y:0,
-                speed:0.5, // This is the parameter for how fast it should move 
+                speed:0.125, // This is the parameter for how fast it should move 
                 friction:0.95,
                 shot:false,
                 update: function(){
@@ -52,35 +51,39 @@
                     if(game.input.keyboard.isDown(Phaser.Keyboard.A)){
                         dx = this.sprite.x - 10;
                         this.speed_x -=  this.speed;
+                        this.sprite.animations.play('hero_walk', 10, false);
                     }
 
                     if(game.input.keyboard.isDown(Phaser.Keyboard.D)){
                         dx = this.sprite.x + 10;
                         this.speed_x +=  this.speed;
+                        this.sprite.animations.play('hero_walk', 10, false);
                     }
 
                     if(game.input.keyboard.isDown(Phaser.Keyboard.W)){
                         dy = this.sprite.y + 10;
                         this.speed_y -= this.speed;
+                        this.sprite.animations.play('hero_walk', 10, false);
                     }
 
                     if(game.input.keyboard.isDown(Phaser.Keyboard.S)){
                         dy = this.sprite.y - 10; 
                         this.speed_y += this.speed;
+                        this.sprite.animations.play('hero_walk', 10, false);
                     }
            
-                    var angle = Math.atan2(dy,dx) - Math.PI/2;
-                    var dir = (angle - this.sprite.rotation) / (Math.PI * 2);
-                    dir -= Math.round(dir);
-                    dir = dir * Math.PI * 2;
-                    this.sprite.rotation += dir * 0.1;
+                    // var angle = Math.atan2(dy,dx) - Math.PI/2;
+                    // var dir = (angle - this.sprite.rotation) / (Math.PI * 2);
+                    // dir -= Math.round(dir);
+                    // dir = dir * Math.PI * 2;
+                    
+                //     this.sprite.rotation += dir * 0.1;
                     
                     this.sprite.body.x += this.speed_x;
                     this.sprite.body.y += this.speed_y;
-
                     this.speed_x *= this.friction;
                     this.speed_y *= this.friction;
-
+                    
                     socket.emit('move-player',{x:this.sprite.x,y:this.sprite.y,angle:this.sprite.rotation})
                 }
             };
@@ -122,28 +125,20 @@
                 players_group = this.game.add.group();
                 game.stage.disableVisibilityChange = true;
 
-                // Create player
-                var player_ship_type = String(1);
                 player.sprite = game.add.sprite(Math.random() * WORLD_SIZE.w/2 + WORLD_SIZE.w/2,Math.random() * WORLD_SIZE.h/2 + WORLD_SIZE.h/2,'hero_walk');
                 
-                // player.sprite.animations.game.add('left', [0, 1, 2, 3], 10, true);
-                // player.sprite.animations.game.add('right', [3,2,1,0], 10, true);
                 player.sprite.anchor.setTo(0.5,0.5);
                 player.sprite.enableUpdate = true;
 
- 
                 players_group.add(player.sprite);
                 game.physics.enable(player.sprite, Phaser.Physics.ARCADE);
-                
                 
                 player.enableBody = true;
                 player.sprite.body.collideWorldBounds=true;
                 game.world.setBounds(0, 0, WORLD_SIZE.w, WORLD_SIZE.h);
- 
-                player.sprite.animations.add('walk', [1,2,3]);
+                player.sprite.animations.add('hero_walk',  [1,2]);
 
                 player.sprite.frame = 3;
-                player.sprite.animations.play('walk', 10, true);
 
                 game.camera.x = player.sprite.x - WINDOW_WIDTH/2;
                 game.camera.y = player.sprite.y - WINDOW_HEIGHT/2;
@@ -162,12 +157,12 @@
                             
                             game.physics.enable(other_players[id], Phaser.Physics.ARCADE);
                             players_group.add(other_players[id]);
-                            console.log("Created new player at (" + data.x + ", " + data.y + ")");
                         }
                         players_found[id] = true;
                         
                         // Update positions of other players
                         if(id != socket.id){
+                         
                           other_players[id].target_x  = players_data[id].x; // Update target, not actual position, so we can interpolate
                           other_players[id].target_y  = players_data[id].y;
                           other_players[id].target_rotation  = players_data[id].angle;
@@ -226,9 +221,7 @@
                     }
                 }
             }
-          
             
-
         </script>
 
     </body>
