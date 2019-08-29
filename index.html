@@ -26,11 +26,12 @@
             //We first initialize the phaser game object
             var sprite;
             var sprite2;
-            var WINDOW_WIDTH = 750;
-            var WINDOW_HEIGHT = 500;
+           
+            var WINDOW_WIDTH = window.innerWidth * window.devicePixelRatio;
+            var WINDOW_HEIGHT = window.innerHeight * window.devicePixelRatio;
             var game = new Phaser.Game(WINDOW_WIDTH, WINDOW_HEIGHT, Phaser.AUTO, '', {preload:preload, create:create, update:GameLoop} );
 
-            var WORLD_SIZE = {w:700,h:700};
+            var WORLD_SIZE = {w:WINDOW_WIDTH,h:WINDOW_HEIGHT};
           
 
             var water_tiles = [];
@@ -85,7 +86,7 @@
             };
 
             function CreateCharacter(type,x,y,angle){
-                var sprite = game.add.sprite(x,y,'character');
+                var sprite = game.add.sprite(x,y,'hero_walk');
                 sprite.rotation = angle;
                 sprite.anchor.setTo(0.5,0.5);
                 return sprite;
@@ -94,6 +95,13 @@
             function preload(){
                 game.load.crossOrigin = "Anonymous";
                 game.stage.backgroundColor = "#3399DA";
+                game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+                game.scale.pageAlignHorizontally = true;
+                game.scale.pageAlignVertically = true;
+                
+                game.load.spritesheet('hero_walk', ASSET_URL + 'hero_walk.png', 64, 64);
+                game.load.image('hero_stab', ASSET_URL + 'hero_stab.png', 64, 64);
+             //   game.load.image('hero_walk', ASSET_URL + 'hero_walk.png', 64, 64);
                 game.load.image('character', ASSET_URL + 'character.png');
                 game.load.image('water', ASSET_URL + 'water_tile.png');
             }
@@ -109,25 +117,34 @@
                         water_tiles.push(tile_sprite);
                     }
                 }
-                
+
+                game.physics.setBoundsToWorld();
                 players_group = this.game.add.group();
-
-              //  game.physics.enable(sprite2, Phaser.Physics.ARCADE);
-    
                 game.stage.disableVisibilityChange = true;
-
-            //    other_players = game.add.physicsGroup(Phaser.Physics.ARCADE);
 
                 // Create player
                 var player_ship_type = String(1);
-                player.sprite = game.add.sprite(Math.random() * WORLD_SIZE.w/2 + WORLD_SIZE.w/2,Math.random() * WORLD_SIZE.h/2 + WORLD_SIZE.h/2,'character');
-                player.sprite.anchor.setTo(0.5,0.5);
+                player.sprite = game.add.sprite(Math.random() * WORLD_SIZE.w/2 + WORLD_SIZE.w/2,Math.random() * WORLD_SIZE.h/2 + WORLD_SIZE.h/2,'hero_walk');
                 
+                // player.sprite.animations.game.add('left', [0, 1, 2, 3], 10, true);
+                // player.sprite.animations.game.add('right', [3,2,1,0], 10, true);
+                player.sprite.anchor.setTo(0.5,0.5);
+                player.sprite.enableUpdate = true;
+
+ 
                 players_group.add(player.sprite);
                 game.physics.enable(player.sprite, Phaser.Physics.ARCADE);
-
+                
+                
+                player.enableBody = true;
+                player.sprite.body.collideWorldBounds=true;
                 game.world.setBounds(0, 0, WORLD_SIZE.w, WORLD_SIZE.h);
  
+                player.sprite.animations.add('walk', [1,2,3]);
+
+                player.sprite.frame = 3;
+                player.sprite.animations.play('walk', 10, true);
+
                 game.camera.x = player.sprite.x - WINDOW_WIDTH/2;
                 game.camera.y = player.sprite.y - WINDOW_HEIGHT/2;
                 
