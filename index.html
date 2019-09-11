@@ -51,25 +51,30 @@
                     if(game.input.keyboard.isDown(Phaser.Keyboard.A)){
                         dx = this.sprite.x - 10;
                         this.speed_x -=  this.speed;
-                        this.sprite.animations.play('hero_walk', 10, false);
+                    }
+
+                    if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)){
+                        this.shot = true;
+                        // check if any enemies nearby 
+                        MakeDamage();
                     }
 
                     if(game.input.keyboard.isDown(Phaser.Keyboard.D)){
                         dx = this.sprite.x + 10;
                         this.speed_x +=  this.speed;
-                        this.sprite.animations.play('hero_walk', 10, false);
+                       // this.sprite.animations.play('hero_walk', 10, false);
                     }
 
                     if(game.input.keyboard.isDown(Phaser.Keyboard.W)){
                         dy = this.sprite.y + 10;
                         this.speed_y -= this.speed;
-                        this.sprite.animations.play('hero_walk', 10, false);
+                      //  this.sprite.animations.play('hero_walk', 10, false);
                     }
 
                     if(game.input.keyboard.isDown(Phaser.Keyboard.S)){
                         dy = this.sprite.y - 10; 
                         this.speed_y += this.speed;
-                        this.sprite.animations.play('hero_walk', 10, false);
+                      //  this.sprite.animations.play('hero_walk', 10, false);
                     }
            
                     // var angle = Math.atan2(dy,dx) - Math.PI/2;
@@ -87,6 +92,29 @@
                     socket.emit('move-player',{x:this.sprite.x,y:this.sprite.y,angle:this.sprite.rotation})
                 }
             };
+            
+            function MakeDamage(){
+                var result = [];
+                for (var id in other_players) {
+                    if(Phaser.Math.distance(other_players[id].x, other_players[id].y, player.sprite.x, player.sprite.y).toFixed(2) <= 100){
+                        result.push(id);
+                    }
+                };
+
+                if(result.length){
+                    socket.emit('make-damage', result);
+                    // play animation on client side
+                    // socket.on('play-get-damaged-animation',function(players_data){
+                    //     var players_found = {};
+                    //     for(var id in players_data){
+                    //         var player_id = players_data[id];
+                    //         other_players[player_id].animations.play('hero_walk', 10, false);
+                    //       //  player.sprite.animations.play('hero_damaged', 10, false);
+                    //     }
+                    // })
+                }
+            }
+            
 
             function CreateCharacter(type,x,y,angle){
                 var sprite = game.add.sprite(x,y,'hero_walk');
@@ -103,6 +131,8 @@
                 game.scale.pageAlignVertically = true;
                 
                 game.load.spritesheet('hero_walk', ASSET_URL + 'hero_walk.png', 64, 64);
+                
+            //    game.load.spritesheet('hero_damaged', ASSET_URL + 'hero_walk.png', 64, 64);
                 game.load.image('hero_stab', ASSET_URL + 'hero_stab.png', 64, 64);
              //   game.load.image('hero_walk', ASSET_URL + 'hero_walk.png', 64, 64);
                 game.load.image('character', ASSET_URL + 'character.png');
@@ -137,6 +167,8 @@
                 player.sprite.body.collideWorldBounds=true;
                 game.world.setBounds(0, 0, WORLD_SIZE.w, WORLD_SIZE.h);
                 player.sprite.animations.add('hero_walk',  [1,2]);
+                
+                player.sprite.animations.add('hero_walk',  [1,2]);
 
                 player.sprite.frame = 3;
 
@@ -144,11 +176,27 @@
                 game.camera.y = player.sprite.y - WINDOW_HEIGHT/2;
                 
                 socket = io(); // This triggers the 'connection' event on the server
-                socket.emit('new-player',{x:player.sprite.x,y:player.sprite.y,angle:player.sprite.rotation,type:1})
+                socket.emit('new-player',{x:player.sprite.x,y:player.sprite.y,angle:player.sprite.rotation,type:1, onMove: false})
                 // Listen for other players connecting
+               
+                
+            socket.on('play-get-damaged-animation', function(players_data){
+                    for(var id in players_data){
+                        var player_id = players_data[id];
+                         // because we dont hold our player in other_players object
+                         // we first check if our player is damaged player
+                        if(this.id == player_id){
+                            player.sprite.animations.play('hero_walk', 10, false);
+                        }else{ // if not, animate appropriate player
+                          other_players[player_id].animations.play('hero_walk', 10, false);
+                        }
+                    }
+            })
+               
                 socket.on('update-players',function(players_data){
                     var players_found = {};
                     for(var id in players_data){
+                        //if new player
                         if(other_players[id] == undefined && id != socket.id){
                             var data = players_data[id];
                             var p = CreateCharacter(data.type, data.x, data.y, data.angle);
@@ -157,12 +205,12 @@
                             
                             game.physics.enable(other_players[id], Phaser.Physics.ARCADE);
                             players_group.add(other_players[id]);
-                        }
+                        } 
+                        //else update existing players
                         players_found[id] = true;
                         
                         // Update positions of other players
                         if(id != socket.id){
-                         
                           other_players[id].target_x  = players_data[id].x; // Update target, not actual position, so we can interpolate
                           other_players[id].target_y  = players_data[id].y;
                           other_players[id].target_rotation  = players_data[id].angle;
@@ -177,6 +225,7 @@
                     }
                    
                 })
+               
             }
 
             function onCollision(){

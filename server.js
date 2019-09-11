@@ -34,14 +34,20 @@ io.on('connection', function(socket){
   socket.on('disconnect',function(state){
     delete players[socket.id];
     io.emit('update-players',players);
-  }) 
+  })
   
+  socket.on('make-damage',function(result){
+    var tt = 0;
+    io.emit('play-get-damaged-animation',result);
+  })
+
   // Listen for move events and tell all other clients that something has moved 
   socket.on('move-player',function(position_data){
     if(players[socket.id] == undefined) return; // Happens if the server restarts and a client is still connected 
     players[socket.id].x = position_data.x;  
     players[socket.id].y = position_data.y; 
     players[socket.id].angle = position_data.angle; 
+    
     io.emit('update-players',players);
   })
   
